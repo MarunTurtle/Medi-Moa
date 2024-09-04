@@ -1,0 +1,2 @@
+환자안전보고학습시스템(KOPS),공지사항,https://www.kops.or.kr/portal/board/kopsNotice/boardDetail.do?nttNo=,https://www.kops.or.kr/portal/board/kopsNotice/boardList.do
+환자안전보고학습시스템(KOPS),정보제공지,https://www.kops.or.kr/portal/ifm/infoProvdStdrDetail.do?nttNo=,https://www.kops.or.kr/portal/ifm/infoProvdStdrList.do
