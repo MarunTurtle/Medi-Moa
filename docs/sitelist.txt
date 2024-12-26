@@ -1,0 +1,31 @@
+1. KOPS (2개)
+   - 공지사항: https://www.kops.or.kr/portal/board/kopsNotice/boardList.do
+   - 정보제공지: https://www.kops.or.kr/portal/ifm/infoProvdStdrList.do
+
+2. 대한병원협회 (1개)
+   - 공지사항: https://www.kha.or.kr/impart/notice/list
+
+3. 대한환자안전학회 (1개)
+   - 공지사항: http://www.patientsafety.kr/index.php?hCode=BOARD&bo_idx=5
+
+4. 한국의료질향상학회 (1개)
+   - 공지사항: https://www.kosqua.net/
+
+5. 대한간호협회 지역환자안전센터 (3개)
+   - 공지: http://patientsafety.koreanurse.or.kr/announcement
+   - 소식지: http://patientsafety.koreanurse.or.kr/news
+   - 교육행사: http://patientsafety.koreanurse.or.kr/promotion
+
+6. 대한병원협회교육센터 (1개)
+   - 공지사항: https://khaedu.or.kr/board/cha_notice
+
+7. 정신간호사회 (2개)
+   - 공지사항: https://www.kpmhna.or.kr/sub5/5_1.php
+   - 자료실: https://www.kpmhna.or.kr/sub6/6_1.php
+
+8. 의료&복지 뉴스 (1개)
+   - http://www.mediwelfare.com/news/articleList.html
+
+9. 질병관리청 (2개)
+   - 공지사항: https://www.kdca.go.kr/board/board.es?mid=a20504000000&bid=0014
+   - 보도자료: https://www.kdca.go.kr/board/board.es?mid=a20501010000&bid=0015
