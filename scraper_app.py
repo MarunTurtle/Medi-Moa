@@ -5,22 +5,30 @@ import importlib
 import sys
 import os
 
+# Column width constants
+SITE_COL_WIDTH = 65
+NUMBER_COL_WIDTH = 40
+DATE_COL_WIDTH = 75
+TEXT_SIZE = 13
+DATA_TEXT_SIZE = 12
+
 # Import all scraper modules
 scraper_modules = {
     "KOPS 공지사항": "1_test_KOPS_NOTICE",
-    "KOPS 정보제공지": "2_test_KOPS_INFO",
-    "대한병원협회 공지사항": "3_test_KHA_NOTICE",
-    "대한환자안전학회 공지사항": "4_test_KSPS_NOTICE",
-    "한국의료질향상학회 공지사항": "5_test_KOSQUA_NOTICE",
-    "지역환자안전센터 공지사항": "6_test_KNAPS_NOTICE",
-    "지역환자안전센터 소식지": "7_test_KNAPS_NEWS",
-    "지역환자안전센터 교육행사": "8_test_KNAPS_PROMOTION",
-    "대한병원협회교육 공지사항": "9_test_KHAEDU_NOTICE",
-    "정신간호사회 공지사항": "10_test_KPMHNA_NOTICE",
-    "정신간호사회 자료실": "11_test_KPMHNA_DATA",
-    "의료&복지 뉴스": "12_test_MEDI_NEWS",
-    "질병관리청 공지사항": "13_test_KDCA_NOTICE",
-    "질병관리청 보도자료": "14_test_KDCA_NEWS"
+    "KOPS 발령": "2_test_KOPS_ALARM",
+    "KOPS 정보제공지": "3_test_KOPS_INFO",
+    "대한병원협회 공지사항": "4_test_KHA_NOTICE",
+    "대한환자안전학회 공지사항": "5_test_KSPS_NOTICE",
+    "한국의료질향상학회 공지사항": "6_test_KOSQUA_NOTICE",
+    "지역환자안전센터 공지사항": "7_test_KNAPS_NOTICE",
+    "지역환자안전센터 소식지": "8_test_KNAPS_NEWS",
+    "지역환자안전센터 교육행사": "9_test_KNAPS_PROMOTION",
+    "대한병원협회교육 공지사항": "10_test_KHAEDU_NOTICE",
+    "정신간호사회 공지사항": "11_test_KPMHNA_NOTICE",
+    "정신간호사회 자료실": "12_test_KPMHNA_DATA",
+    "의료&복지 뉴스": "13_test_MEDI_NEWS",
+    "질병관리청 공지사항": "14_test_KDCA_NOTICE",
+    "질병관리청 보도자료": "15_test_KDCA_NEWS"
 }
 
 def validate_dates(start_date, until_date):
@@ -39,7 +47,7 @@ def main(page: ft.Page):
     
     # Move loading_text definition to the top of main
     loading_text = ft.Text(
-        "검색중...",
+        "⌛",  # Using an hourglass emoji instead
         size=16,
         color="blue",
         weight=ft.FontWeight.BOLD,
@@ -62,10 +70,25 @@ def main(page: ft.Page):
     # Define results_view at the start
     results_view = ft.DataTable(
         columns=[
-            ft.DataColumn(ft.Text("사이트", size=13, weight=ft.FontWeight.W_500)),
-            ft.DataColumn(ft.Text("번호", size=13, weight=ft.FontWeight.W_500)),
-            ft.DataColumn(ft.Text("제목", size=13, weight=ft.FontWeight.W_500)),
-            ft.DataColumn(ft.Text("날짜", size=13, weight=ft.FontWeight.W_500)),
+            ft.DataColumn(
+                ft.Container(
+                    content=ft.Text("사이트", size=TEXT_SIZE, weight=ft.FontWeight.W_500),
+                    width=SITE_COL_WIDTH
+                )
+            ),
+            ft.DataColumn(
+                ft.Container(
+                    content=ft.Text("번호", size=TEXT_SIZE, weight=ft.FontWeight.W_500),
+                    width=NUMBER_COL_WIDTH
+                )
+            ),
+            ft.DataColumn(ft.Text("제목", size=TEXT_SIZE, weight=ft.FontWeight.W_500)),  # Responsive
+            ft.DataColumn(
+                ft.Container(
+                    content=ft.Text("날짜", size=TEXT_SIZE, weight=ft.FontWeight.W_500),
+                    width=DATE_COL_WIDTH
+                )
+            ),
         ],
         rows=[],
         visible=False,
@@ -134,8 +157,8 @@ def main(page: ft.Page):
     page.title = "의료정보 검색"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.padding = 30
-    page.window.width = 1500
-    page.window.height = 1000
+    page.window.width = 1280
+    page.window.height = 720
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.scroll = ft.ScrollMode.AUTO
     
@@ -202,85 +225,77 @@ def main(page: ft.Page):
     def scrape_data(e):
         clear_results()
         if not selected_sites:
-            results_view.rows.append(
-                ft.DataRow(
-                    cells=[
-                        ft.DataCell(ft.Text("")),  # Site column
-                        ft.DataCell(ft.Text("")),  # Number column
-                        ft.DataCell(ft.Text("웹사이트를 선택해주세요", color="red")),  # Title column
-                        ft.DataCell(ft.Text(""))   # Date column
-                    ]
-                )
-            )
-            results_view.visible = True
+            status_container.content.controls[1].value = "웹사이트를 선택해주세요"
             page.update()
             return
         
-        results_view.visible = True
-        all_scraped_data = []
+        results_view.visible = False  # Hide table while searching
+        all_scraped_data = []  # Initialize the list here
         
         try:
             loading_text.visible = True
-            status_container.content.controls[1].value = ""
+            status_container.content.controls[1].value = "검색 중입니다..."
             scrape_button.disabled = True
             page.update()
             
             for site in selected_sites:
-                module_name = scraper_modules[site]
-                module = importlib.import_module(module_name)
-                
-                if date_range_tabs.selected_index == 0:
-                    start_date, until_date = get_date_range("today")
-                elif date_range_tabs.selected_index == 1:
-                    start_date, until_date = get_date_range("week")
-                else:
-                    start_date = start_date_picker.value
-                    until_date = until_date_picker.value
+                try:
+                    module_name = scraper_modules[site]
+                    module = importlib.import_module(module_name)
+                    
+                    if date_range_tabs.selected_index == 0:
+                        start_date, until_date = get_date_range("today")
+                    elif date_range_tabs.selected_index == 1:
+                        start_date, until_date = get_date_range("week")
+                    else:
+                        start_date = start_date_picker.value
+                        until_date = until_date_picker.value
 
-                is_valid, error_message = validate_dates(start_date, until_date)
-                if not is_valid:
-                    results_view.rows.append(
-                        ft.DataRow(
-                            cells=[
-                                ft.DataCell(ft.Text("")),  # Site column
-                                ft.DataCell(ft.Text(error_message, color="red")),
-                                ft.DataCell(ft.Text("")),
-                                ft.DataCell(ft.Text("")),
-                                ft.DataCell(ft.Text(""))
-                            ]
-                        )
-                    )
-                    page.update()
-                    return
+                    is_valid, error_message = validate_dates(start_date, until_date)
+                    if not is_valid:
+                        status_container.content.controls[1].value = error_message
+                        loading_text.visible = False
+                        scrape_button.disabled = False
+                        page.update()
+                        return
 
-                # Add site name to each scraped item
-                site_data = module.scrape_all_pages(start_date, until_date)
-                for item in site_data:
-                    # Convert item to tuple if it's a list
-                    item_tuple = tuple(item) if isinstance(item, list) else item
-                    # Create new tuple with site name as first element
-                    all_scraped_data.append((site,) + item_tuple)
+                    # Add site name to each scraped item
+                    site_data = module.scrape_all_pages(start_date, until_date)
+                    if site_data:  # Check if data exists
+                        for item in site_data:
+                            # Convert item to tuple if it's a list
+                            item_tuple = tuple(item) if isinstance(item, list) else item
+                            # Create new tuple with site name as first element
+                            all_scraped_data.append((site,) + item_tuple)
+                except ImportError as ie:
+                    status_container.content.controls[1].value = f"모듈을 찾을 수 없습니다: {module_name}"
+                    print(f"Import error: {str(ie)}")
+                    continue
+                except Exception as e:
+                    status_container.content.controls[1].value = f"{site} 스크래핑 중 오류 발생: {str(e)}"
+                    print(f"Scraping error for {site}: {str(e)}")
+                    continue
             
-            # Sort combined results by date
-            all_scraped_data.sort(key=lambda x: pd.to_datetime(x[3]), reverse=True)
-            show_results(all_scraped_data)
+            if all_scraped_data:
+                # Sort combined results by date
+                try:
+                    all_scraped_data.sort(key=lambda x: pd.to_datetime(x[3]), reverse=True)
+                    show_results(all_scraped_data)
+                except Exception as e:
+                    status_container.content.controls[1].value = f"데이터 정렬 중 오류 발생: {str(e)}"
+            else:
+                status_container.content.controls[1].value = "검색 결과가 없습니다."
+            
+            loading_text.visible = False
+            scrape_button.disabled = False
+            page.update()
             
         except Exception as e:
-            results_view.rows.append(
-                ft.DataRow(
-                    cells=[
-                        ft.DataCell(ft.Text("")),  # Site column
-                        ft.DataCell(ft.Text(f"오류가 발생했습니다: {str(e)}", color="red")),
-                        ft.DataCell(ft.Text("")),
-                        ft.DataCell(ft.Text("")),
-                        ft.DataCell(ft.Text(""))
-                    ]
-                )
-            )
-        
-        loading_text.visible = False
-        scrape_button.disabled = False
-        page.update()
+            status_container.content.controls[1].value = f"오류가 발생했습니다: {str(e)}"
+            loading_text.visible = False
+            scrape_button.disabled = False
+            page.update()
+            return
 
     # Move button creation after scrape_data function definition
     scrape_button = ft.ElevatedButton(
@@ -385,52 +400,60 @@ def main(page: ft.Page):
 
     def clear_results():
         results_view.rows.clear()
+        results_view.visible = False
+        status_container.content.controls[1].value = ""
         page.update()
 
     def show_results(data):
-        results_view.rows.clear()
-        
-        status_container.content.controls[1].value = f"총 {len(data)}개의 결과를 찾았습니다." if data else ""
-        
-        if not data:
-            results_view.rows.append(
-                ft.DataRow(
-                    cells=[
-                        ft.DataCell(ft.Text("")),          # Site column
-                        ft.DataCell(ft.Text("")),          # Number column
-                        ft.DataCell(ft.Text("검색 결과가 없습니다.", size=12)),  # Title column
-                        ft.DataCell(ft.Text(""))           # Date column
-                    ]
-                )
-            )
-            page.update()
-            return
-        
-        for item in data:
-            row = ft.DataRow(
-                cells=[
-                    ft.DataCell(ft.Text(item[0], size=12)),  # Site name
-                    ft.DataCell(ft.Text(str(item[1]), size=12)),  # Number
-                    ft.DataCell(
-                        content=ft.TextButton(
-                            text=item[2],
-                            url=item[4],
-                            style=ft.ButtonStyle(
-                                color={
-                                    ft.ControlState.DEFAULT: ft.Colors.BLUE_600,  # Updated to ft.Colors
-                                    ft.ControlState.HOVERED: ft.Colors.BLUE_800,  # Updated to ft.Colors
-                                },
-                                padding=10,
+        try:
+            results_view.rows.clear()
+            
+            if not data:
+                status_container.content.controls[1].value = "검색 결과가 없습니다."
+                results_view.visible = False
+                page.update()
+                return
+            
+            status_container.content.controls[1].value = f"총 {len(data)}개의 결과를 찾았습니다."
+            
+            for item in data:
+                try:
+                    row = ft.DataRow(
+                        cells=[
+                            ft.DataCell(ft.Container(content=ft.Text(item[0], size=DATA_TEXT_SIZE), width=SITE_COL_WIDTH)),
+                            ft.DataCell(ft.Container(content=ft.Text(str(item[1]), size=DATA_TEXT_SIZE), width=NUMBER_COL_WIDTH)),
+                            ft.DataCell(  # Title - responsive
+                                content=ft.TextButton(
+                                    text=item[2],
+                                    url=item[4],
+                                    style=ft.ButtonStyle(
+                                        color={
+                                            ft.ControlState.DEFAULT: ft.Colors.BLUE_600,
+                                            ft.ControlState.HOVERED: ft.Colors.BLUE_800,
+                                        },
+                                        padding=10,
+                                    ),
+                                    tooltip=item[4],
+                                ),
                             ),
-                            tooltip=item[4],
-                        ),
-                    ),
-                    ft.DataCell(ft.Text(str(item[3]), size=12)),  # Date
-                ]
-            )
-            results_view.rows.append(row)
-        
-        page.update()
+                            ft.DataCell(ft.Container(content=ft.Text(str(item[3]), size=DATA_TEXT_SIZE), width=DATE_COL_WIDTH)),
+                        ]
+                    )
+                    results_view.rows.append(row)
+                except IndexError as ie:
+                    print(f"Data format error for item: {item}")
+                    print(f"Index error: {str(ie)}")
+                    continue
+                except Exception as e:
+                    print(f"Error processing row: {str(e)}")
+                    continue
+            
+            results_view.visible = True
+            page.update()
+            
+        except Exception as e:
+            status_container.content.controls[1].value = f"결과 표시 중 오류 발생: {str(e)}"
+            page.update()
 
 if __name__ == "__main__":
     ft.app(target=main) 

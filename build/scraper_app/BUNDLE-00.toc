@@ -1,0 +1,3 @@
+([('scraper_app',
+   '/Users/marun/Documents/GitHub/COGI_HELPER/dist/scraper_app',
+   'EXECUTABLE')],)
