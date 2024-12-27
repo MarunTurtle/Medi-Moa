@@ -1,0 +1,4 @@
+flet
+pandas
+requests
+beautifulsoup4 

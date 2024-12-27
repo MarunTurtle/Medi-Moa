@@ -45,20 +45,10 @@ def main(page: ft.Page):
     global selected_sites
     selected_sites = set()
     
-    # Move loading_text definition to the top of main
-    loading_text = ft.Text(
-        "⌛",  # Using an hourglass emoji instead
-        size=16,
-        color="blue",
-        weight=ft.FontWeight.BOLD,
-        visible=False,
-    )
-
-    # Create status container after loading_text is defined
+    # Create status container
     status_container = ft.Container(
         content=ft.Column(
             controls=[
-                loading_text,
                 ft.Text("", size=14, color="grey", weight=ft.FontWeight.BOLD)
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -225,7 +215,7 @@ def main(page: ft.Page):
     def scrape_data(e):
         clear_results()
         if not selected_sites:
-            status_container.content.controls[1].value = "웹사이트를 선택해주세요"
+            status_container.content.controls[0].value = "웹사이트를 선택해주세요"
             page.update()
             return
         
@@ -233,8 +223,7 @@ def main(page: ft.Page):
         all_scraped_data = []  # Initialize the list here
         
         try:
-            loading_text.visible = True
-            status_container.content.controls[1].value = "검색 중입니다..."
+            status_container.content.controls[0].value = "검색 중입니다..."
             scrape_button.disabled = True
             page.update()
             
@@ -253,8 +242,7 @@ def main(page: ft.Page):
 
                     is_valid, error_message = validate_dates(start_date, until_date)
                     if not is_valid:
-                        status_container.content.controls[1].value = error_message
-                        loading_text.visible = False
+                        status_container.content.controls[0].value = error_message
                         scrape_button.disabled = False
                         page.update()
                         return
@@ -268,11 +256,11 @@ def main(page: ft.Page):
                             # Create new tuple with site name as first element
                             all_scraped_data.append((site,) + item_tuple)
                 except ImportError as ie:
-                    status_container.content.controls[1].value = f"모듈을 찾을 수 없습니다: {module_name}"
+                    status_container.content.controls[0].value = f"모듈을 찾을 수 없습니다: {module_name}"
                     print(f"Import error: {str(ie)}")
                     continue
                 except Exception as e:
-                    status_container.content.controls[1].value = f"{site} 스크래핑 중 오류 발생: {str(e)}"
+                    status_container.content.controls[0].value = f"{site} 스크래핑 중 오류 발생: {str(e)}"
                     print(f"Scraping error for {site}: {str(e)}")
                     continue
             
@@ -282,17 +270,15 @@ def main(page: ft.Page):
                     all_scraped_data.sort(key=lambda x: pd.to_datetime(x[3]), reverse=True)
                     show_results(all_scraped_data)
                 except Exception as e:
-                    status_container.content.controls[1].value = f"데이터 정렬 중 오류 발생: {str(e)}"
+                    status_container.content.controls[0].value = f"데이터 정렬 중 오류 발생: {str(e)}"
             else:
-                status_container.content.controls[1].value = "검색 결과가 없습니다."
+                status_container.content.controls[0].value = "검색 결과가 없습니다."
             
-            loading_text.visible = False
             scrape_button.disabled = False
             page.update()
             
         except Exception as e:
-            status_container.content.controls[1].value = f"오류가 발생했습니다: {str(e)}"
-            loading_text.visible = False
+            status_container.content.controls[0].value = f"오류가 발생했습니다: {str(e)}"
             scrape_button.disabled = False
             page.update()
             return
@@ -401,7 +387,7 @@ def main(page: ft.Page):
     def clear_results():
         results_view.rows.clear()
         results_view.visible = False
-        status_container.content.controls[1].value = ""
+        status_container.content.controls[0].value = ""
         page.update()
 
     def show_results(data):
@@ -409,12 +395,12 @@ def main(page: ft.Page):
             results_view.rows.clear()
             
             if not data:
-                status_container.content.controls[1].value = "검색 결과가 없습니다."
+                status_container.content.controls[0].value = "검색 결과가 없습니다."
                 results_view.visible = False
                 page.update()
                 return
             
-            status_container.content.controls[1].value = f"총 {len(data)}개의 결과를 찾았습니다."
+            status_container.content.controls[0].value = f"총 {len(data)}개의 결과를 찾았습니다."
             
             for item in data:
                 try:
@@ -452,7 +438,7 @@ def main(page: ft.Page):
             page.update()
             
         except Exception as e:
-            status_container.content.controls[1].value = f"결과 표시 중 오류 발생: {str(e)}"
+            status_container.content.controls[0].value = f"결과 표시 중 오류 발생: {str(e)}"
             page.update()
 
 if __name__ == "__main__":
